@@ -333,6 +333,11 @@ input[type=text]{
     );
 }
 
+.submit:disabled{
+    opacity:.6;
+    cursor:not-allowed;
+}
+
 #message{
 
     display:none;
@@ -342,6 +347,14 @@ input[type=text]{
     text-align:center;
 
     line-height:1.8;
+}
+
+#errorMessage{
+    display:none;
+    margin-top:20px;
+    text-align:center;
+    color:#ff6b6b;
+    line-height:1.6;
 }
 
 footer{
@@ -599,7 +612,8 @@ id="plus">
 
 <button
 class="submit"
-type="submit">
+type="submit"
+id="submitBtn">
 
 Submit RSVP
 
@@ -608,6 +622,7 @@ Submit RSVP
 </form>
 
 <div id="message"></div>
+<div id="errorMessage"></div>
 
 </div>
 
@@ -688,6 +703,27 @@ document
 
     e.preventDefault();
 
+    if(!attendance){
+
+        const errorBox =
+            document.getElementById("errorMessage");
+
+        errorBox.style.display = "block";
+
+        errorBox.innerText =
+            "Please select whether you'll be attending.";
+
+        return;
+    }
+
+    const submitBtn =
+        document.getElementById("submitBtn");
+
+    submitBtn.disabled = true;
+
+    submitBtn.innerText =
+        "Submitting...";
+
     const name =
         document.getElementById("name")
         .value;
@@ -705,64 +741,93 @@ document
 
     };
 
-    await fetch(API_URL, {
+    try{
 
-        method: "POST",
+        // NOTE: Content-Type is text/plain on purpose.
+        // Google Apps Script web apps don't handle CORS
+        // preflight (OPTIONS) requests, so sending
+        // "application/json" causes the browser to block
+        // the request before it even reaches the script.
+        // text/plain avoids the preflight; doPost() on the
+        // Apps Script side still parses it as JSON.
 
-        headers: {
-            "Content-Type":
-            "application/json"
-        },
+        await fetch(API_URL, {
 
-        body:
-            JSON.stringify(payload)
+            method: "POST",
 
-    });
+            headers: {
+                "Content-Type":
+                "text/plain;charset=utf-8"
+            },
 
-    this.style.display = "none";
+            body:
+                JSON.stringify(payload)
 
-    const message =
-        document.getElementById("message");
+        });
 
-    message.style.display = "block";
+        this.style.display = "none";
 
-    if(attendance === "no") {
+        const message =
+            document.getElementById("message");
 
-        message.innerHTML = `
+        message.style.display = "block";
 
-        <h2>Thank You</h2>
+        if(attendance === "no") {
 
-        <p>
+            message.innerHTML = `
 
-        We're sorry you won't be able to join us.
+            <h2>Thank You</h2>
 
-        <br><br>
+            <p>
 
-        Thank you for letting us know.
+            We're sorry you won't be able to join us.
 
-        <br><br>
+            <br><br>
 
-        We hope to see you at one of our future events.
+            Thank you for letting us know.
 
-        </p>
-        `;
+            <br><br>
 
-    } else {
+            We hope to see you at one of our future events.
 
-        message.innerHTML = `
+            </p>
+            `;
 
-        <h2>🎉 You're on the list!</h2>
+        } else {
 
-        <p>
+            message.innerHTML = `
 
-        Thank you for confirming.
+            <h2>🎉 You're on the list!</h2>
 
-        <br><br>
+            <p>
 
-        Total attendees: ${attendees}
+            Thank you for confirming.
 
-        </p>
-        `;
+            <br><br>
+
+            Total attendees: ${attendees}
+
+            </p>
+            `;
+
+        }
+
+    } catch(err){
+
+        console.error("RSVP submit failed:", err);
+
+        submitBtn.disabled = false;
+
+        submitBtn.innerText =
+            "Submit RSVP";
+
+        const errorBox =
+            document.getElementById("errorMessage");
+
+        errorBox.style.display = "block";
+
+        errorBox.innerText =
+            "Something went wrong submitting your RSVP. Please try again.";
 
     }
 
