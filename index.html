@@ -743,17 +743,24 @@ document
 
     try{
 
-        // NOTE: Content-Type is text/plain on purpose.
-        // Google Apps Script web apps don't handle CORS
-        // preflight (OPTIONS) requests, so sending
-        // "application/json" causes the browser to block
-        // the request before it even reaches the script.
-        // text/plain avoids the preflight; doPost() on the
-        // Apps Script side still parses it as JSON.
+        // NOTE: mode is "no-cors" on purpose.
+        // Google Apps Script redirects the request internally
+        // (script.google.com -> script.googleusercontent.com)
+        // and that redirect response doesn't include an
+        // Access-Control-Allow-Origin header, so the browser
+        // blocks it under normal "cors" mode even though the
+        // request itself is simple. "no-cors" tells the browser
+        // not to enforce that check. The trade-off: we can't
+        // read the response body or status back, so we just
+        // assume success if fetch doesn't throw a network error.
+        // doPost() on the Apps Script side still parses the
+        // body as JSON.
 
         await fetch(API_URL, {
 
             method: "POST",
+
+            mode: "no-cors",
 
             headers: {
                 "Content-Type":
