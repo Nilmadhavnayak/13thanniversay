@@ -1108,7 +1108,6 @@ Submit
 </div>
 
 </section>
-
 <script>
 
 /* =====================================================
@@ -1125,9 +1124,9 @@ const celebrationImages = [
 ];
 
 
-/*
-    Shuffle array
-*/
+/* =====================================================
+   SHUFFLE ARRAY
+===================================================== */
 
 function shuffle(array){
 
@@ -1152,15 +1151,17 @@ function shuffle(array){
             shuffled[j],
             shuffled[i]
         ];
+
     }
 
     return shuffled;
+
 }
 
 
-/*
-    Create 4 random images
-*/
+/* =====================================================
+   LOAD RANDOM CELEBRATION IMAGES
+===================================================== */
 
 function loadCelebrationImages(){
 
@@ -1169,12 +1170,17 @@ function loadCelebrationImages(){
             "celebrationGallery"
         );
 
+    if(!gallery){
+        return;
+    }
+
     const selected =
         shuffle(
             celebrationImages
         ).slice(0,4);
 
     gallery.innerHTML = "";
+
 
     selected.forEach(
         (image,index)=>{
@@ -1187,107 +1193,279 @@ function loadCelebrationImages(){
             card.className =
                 "celebration-card";
 
+
             const img =
                 document.createElement(
                     "img"
                 );
 
-            img.src = image;
+            img.src =
+                image;
 
             img.alt =
                 "Happy Visitor anniversary celebration";
 
-            img.loading = "lazy";
+            img.loading =
+                "lazy";
 
-            card.appendChild(img);
 
-            gallery.appendChild(card);
+            card.appendChild(
+                img
+            );
+
+
+            gallery.appendChild(
+                card
+            );
 
         }
     );
+
 }
+
+
+/* Load images */
 
 loadCelebrationImages();
 
 
+
 /* =====================================================
-   RSVP
+   RSVP VARIABLES
 ===================================================== */
-
-let attendees = 1;
-
-const options =
-    document.querySelectorAll(".option");
-
-const yesSection =
-    document.getElementById("yesSection");
-
-const countSelect =
-    document.getElementById("count");
 
 let attendance = "";
 
 
+const options =
+    document.querySelectorAll(
+        ".option"
+    );
+
+
+const yesSection =
+    document.getElementById(
+        "yesSection"
+    );
+
+
+const countSelect =
+    document.getElementById(
+        "count"
+    );
+
+
+const submitBtn =
+    document.getElementById(
+        "submitBtn"
+    );
+
+
+const rsvpForm =
+    document.getElementById(
+        "rsvpForm"
+    );
+
+
+const nameInput =
+    document.getElementById(
+        "name"
+    );
+
+
+const message =
+    document.getElementById(
+        "message"
+    );
+
+
+const errorMessage =
+    document.getElementById(
+        "errorMessage"
+    );
+
+
+
 /* =====================================================
-   YES / NO
+   GOOGLE SHEETS API
 ===================================================== */
 
-options.forEach(option => {
+const API_URL =
+"https://script.google.com/macros/s/AKfycbzzImoCueXY7kZBdudTQmfwzugMhEH_TRh0A0Tr1MPdIqJ3MOJowMxKZ1Y2wvDVW90q/exec";
 
-    option.onclick = () => {
-
-        options.forEach(o =>
-            o.classList.remove("active")
-        );
-
-        option.classList.add("active");
-
-        option.querySelector(
-            "input"
-        ).checked = true;
-
-        attendance =
-            option.dataset.value;
-
-
-        /*
-            Show family member dropdown
-            only when Yes is selected
-        */
-
-        if(attendance === "yes"){
-
-            yesSection.style.display =
-                "block";
-
-        }
-        else{
-
-            yesSection.style.display =
-                "none";
-
-            /*
-                Reset attendee count
-                when No is selected
-            */
-
-            attendees = 1;
-
-            if(countSelect){
-
-                countSelect.value = "1";
-
-            }
-
-        }
-
-    };
-
-});
 
 
 /* =====================================================
-   ATTENDEE DROPDOWN
+   YES / NO SELECTION
+===================================================== */
+
+options.forEach(
+    option => {
+
+        option.addEventListener(
+            "click",
+            function(){
+
+                /* -----------------------------------------
+                   Remove active state from all options
+                ----------------------------------------- */
+
+                options.forEach(
+                    o => {
+
+                        o.classList.remove(
+                            "active"
+                        );
+
+
+                        const radio =
+                            o.querySelector(
+                                "input"
+                            );
+
+
+                        if(radio){
+
+                            radio.checked =
+                                false;
+
+                        }
+
+                    }
+                );
+
+
+                /* -----------------------------------------
+                   Activate selected option
+                ----------------------------------------- */
+
+                this.classList.add(
+                    "active"
+                );
+
+
+                const radio =
+                    this.querySelector(
+                        "input"
+                    );
+
+
+                if(radio){
+
+                    radio.checked =
+                        true;
+
+                }
+
+
+                /* -----------------------------------------
+                   Get attendance value
+                ----------------------------------------- */
+
+                attendance =
+                    this.dataset.value;
+
+
+                console.log(
+                    "Attendance selected:",
+                    attendance
+                );
+
+
+                /* -----------------------------------------
+                   YES
+                ----------------------------------------- */
+
+                if(
+                    attendance === "yes"
+                ){
+
+                    yesSection.style.display =
+                        "block";
+
+
+                    /*
+                        Default family members
+                        to 0 when Yes is selected.
+                    */
+
+                    if(countSelect){
+
+                        if(
+                            !countSelect.value ||
+                            countSelect.value === ""
+                        ){
+
+                            countSelect.value =
+                                "0";
+
+                        }
+
+                    }
+
+                }
+
+
+                /* -----------------------------------------
+                   NO
+                ----------------------------------------- */
+
+                else if(
+                    attendance === "no"
+                ){
+
+                    /*
+                        Hide family member field
+                    */
+
+                    yesSection.style.display =
+                        "none";
+
+
+                    /*
+                        No family members
+                        when employee is not attending.
+                    */
+
+                    if(countSelect){
+
+                        countSelect.value =
+                            "0";
+
+                    }
+
+
+                    console.log(
+                        "No attendance selected."
+                    );
+
+                }
+
+
+                /*
+                    Hide previous error
+                */
+
+                if(errorMessage){
+
+                    errorMessage.style.display =
+                        "none";
+
+                    errorMessage.innerText =
+                        "";
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+
+/* =====================================================
+   FAMILY MEMBER COUNT CHANGE
 ===================================================== */
 
 if(countSelect){
@@ -1296,16 +1474,23 @@ if(countSelect){
         "change",
         function(){
 
-            attendees =
+            const familyMembers =
                 parseInt(
                     this.value,
                     10
-                );
+                ) || 0;
+
+
+            console.log(
+                "Family members:",
+                familyMembers
+            );
 
         }
     );
 
 }
+
 
 
 /* =====================================================
@@ -1319,8 +1504,18 @@ function fireConfetti(){
             "confettiCanvas"
         );
 
+
+    if(!canvas){
+
+        return;
+
+    }
+
+
     const ctx =
-        canvas.getContext("2d");
+        canvas.getContext(
+            "2d"
+        );
 
 
     function resize(){
@@ -1333,7 +1528,9 @@ function fireConfetti(){
 
     }
 
+
     resize();
+
 
     window.addEventListener(
         "resize",
@@ -1352,10 +1549,17 @@ function fireConfetti(){
     ];
 
 
-    const pieceCount = 160;
+    const pieceCount =
+        160;
 
-    const pieces = [];
 
+    const pieces =
+        [];
+
+
+    /* -----------------------------------------
+       Create confetti pieces
+    ----------------------------------------- */
 
     for(
         let i = 0;
@@ -1369,19 +1573,25 @@ function fireConfetti(){
                 Math.random() *
                 canvas.width,
 
+
             y:
                 -20 -
                 Math.random() *
                 canvas.height *
-                .5,
+                0.5,
+
 
             w:
                 6 +
-                Math.random() * 6,
+                Math.random() *
+                6,
+
 
             h:
                 8 +
-                Math.random() * 10,
+                Math.random() *
+                10,
+
 
             color:
                 colors[
@@ -1391,45 +1601,70 @@ function fireConfetti(){
                     )
                 ],
 
+
             rotation:
-                Math.random() * 360,
+                Math.random() *
+                360,
+
 
             rotationSpeed:
                 -6 +
-                Math.random() * 12,
+                Math.random() *
+                12,
+
 
             speedY:
                 2 +
-                Math.random() * 3,
+                Math.random() *
+                3,
+
 
             speedX:
                 -1.5 +
-                Math.random() * 3,
+                Math.random() *
+                3,
+
 
             drift:
                 Math.random() *
                 Math.PI *
                 2,
 
+
             drag:
-                .02 +
-                Math.random() * .02
+                0.02 +
+                Math.random() *
+                0.02
 
         });
 
     }
 
 
-    const duration = 4200;
+
+    /* -----------------------------------------
+       Animation duration
+    ----------------------------------------- */
+
+    const duration =
+        4200;
+
 
     const startTime =
         performance.now();
 
 
+
+    /* -----------------------------------------
+       Animation frame
+    ----------------------------------------- */
+
     function frame(now){
 
         const elapsed =
-            now - startTime;
+            now -
+            startTime;
+
 
         ctx.clearRect(
             0,
@@ -1439,64 +1674,87 @@ function fireConfetti(){
         );
 
 
-        let stillFalling = false;
+        let stillFalling =
+            false;
 
 
-        pieces.forEach(p => {
+        pieces.forEach(
+            p => {
 
-            p.drift += p.drag;
-
-            p.x +=
-                p.speedX +
-                Math.sin(p.drift) *
-                1.2;
-
-            p.y += p.speedY;
-
-            p.rotation +=
-                p.rotationSpeed;
+                p.drift +=
+                    p.drag;
 
 
-            if(
-                p.y <
-                canvas.height + 20
-            ){
+                p.x +=
+                    p.speedX +
+                    Math.sin(
+                        p.drift
+                    ) *
+                    1.2;
 
-                stillFalling = true;
+
+                p.y +=
+                    p.speedY;
+
+
+                p.rotation +=
+                    p.rotationSpeed;
+
+
+                if(
+                    p.y <
+                    canvas.height +
+                    20
+                ){
+
+                    stillFalling =
+                        true;
+
+                }
+
+
+                ctx.save();
+
+
+                ctx.translate(
+                    p.x,
+                    p.y
+                );
+
+
+                ctx.rotate(
+                    p.rotation *
+                    Math.PI /
+                    180
+                );
+
+
+                ctx.fillStyle =
+                    p.color;
+
+
+                ctx.fillRect(
+                    -p.w / 2,
+                    -p.h / 2,
+                    p.w,
+                    p.h
+                );
+
+
+                ctx.restore();
 
             }
+        );
 
 
-            ctx.save();
 
-            ctx.translate(
-                p.x,
-                p.y
-            );
-
-            ctx.rotate(
-                p.rotation *
-                Math.PI /
-                180
-            );
-
-            ctx.fillStyle =
-                p.color;
-
-            ctx.fillRect(
-                -p.w / 2,
-                -p.h / 2,
-                p.w,
-                p.h
-            );
-
-            ctx.restore();
-
-        });
-
+        /* -----------------------------------------
+           Continue animation
+        ----------------------------------------- */
 
         if(
-            elapsed < duration &&
+            elapsed <
+            duration &&
             stillFalling
         ){
 
@@ -1505,6 +1763,12 @@ function fireConfetti(){
             );
 
         }
+
+
+        /* -----------------------------------------
+           Stop animation
+        ----------------------------------------- */
+
         else{
 
             ctx.clearRect(
@@ -1513,6 +1777,7 @@ function fireConfetti(){
                 canvas.width,
                 canvas.height
             );
+
 
             window.removeEventListener(
                 "resize",
@@ -1524,270 +1789,452 @@ function fireConfetti(){
     }
 
 
-    requestAnimationFrame(frame);
+    requestAnimationFrame(
+        frame
+    );
 
 }
 
-
-/* =====================================================
-   GOOGLE SHEETS API
-===================================================== */
-
-const API_URL =
-"https://script.google.com/macros/s/AKfycbzzImoCueXY7kZBdudTQmfwzugMhEH_TRh0A0Tr1MPdIqJ3MOJowMxKZ1Y2wvDVW90q/exec";
 
 
 /* =====================================================
    FORM SUBMIT
 ===================================================== */
 
-document
-.getElementById("rsvpForm")
-.onsubmit = async function(e){
+if(rsvpForm){
 
-    e.preventDefault();
+    rsvpForm.addEventListener(
+        "submit",
+        async function(e){
 
-
-    /* =================================================
-       VALIDATE ATTENDANCE
-    ================================================= */
-
-    if(!attendance){
-
-        const errorBox =
-            document.getElementById(
-                "errorMessage"
-            );
-
-        errorBox.style.display =
-            "block";
-
-        errorBox.innerText =
-            "Please select whether you'll be attending.";
-
-        return;
-
-    }
+            e.preventDefault();
 
 
-    /* =================================================
-       GET SUBMIT BUTTON
-    ================================================= */
+            /* =============================================
+               CLEAR PREVIOUS ERROR
+            ============================================= */
 
-    const submitBtn =
-        document.getElementById(
-            "submitBtn"
-        );
+            if(errorMessage){
 
+                errorMessage.style.display =
+                    "none";
 
-    submitBtn.disabled = true;
-
-    submitBtn.innerText =
-        "Submitting...";
-
-
-    /* =================================================
-       GET EMPLOYEE NAME
-    ================================================= */
-
-    const name =
-        document.getElementById(
-            "name"
-        ).value.trim();
-
-
-    /* =================================================
-       GET ATTENDEE COUNT
-    ================================================= */
-
-    /*
-        Read the latest selected dropdown value.
-        This ensures the value sent to Google Sheets
-        is always correct.
-    */
-
-    if(attendance === "yes" && countSelect){
-
-        attendees =
-            parseInt(
-                countSelect.value,
-                10
-            );
-
-    }
-
-
-    /* =================================================
-       CREATE PAYLOAD
-    ================================================= */
-
-    const payload = {
-
-        name: name,
-
-        attending: attendance,
-
-        totalCount:
-            attendance === "yes"
-                ? attendees
-                : 0
-
-    };
-
-
-    console.log(
-        "RSVP Payload:",
-        payload
-    );
-
-
-    /* =================================================
-       SUBMIT TO GOOGLE SHEETS
-    ================================================= */
-
-    try{
-
-        await fetch(
-            API_URL,
-            {
-
-                method:"POST",
-
-                mode:"no-cors",
-
-                headers:{
-                    "Content-Type":
-                    "text/plain;charset=utf-8"
-                },
-
-                body:
-                    JSON.stringify(
-                        payload
-                    )
+                errorMessage.innerText =
+                    "";
 
             }
-        );
 
 
-        /* =================================================
-           HIDE FORM
-        ================================================= */
 
-        document.getElementById(
-            "rsvpForm"
-        ).style.display =
-            "none";
+            /* =============================================
+               GET EMPLOYEE NAME
+            ============================================= */
 
-
-        document.querySelector(
-            ".rsvp-title"
-        ).style.display =
-            "none";
+            const name =
+                nameInput
+                    ? nameInput.value.trim()
+                    : "";
 
 
-        /* =================================================
-           SHOW SUCCESS MESSAGE
-        ================================================= */
 
-        const message =
-            document.getElementById(
-                "message"
+            /* =============================================
+               VALIDATE NAME
+            ============================================= */
+
+            if(!name){
+
+                if(errorMessage){
+
+                    errorMessage.style.display =
+                        "block";
+
+                    errorMessage.innerText =
+                        "Please enter your full name.";
+
+                }
+
+                if(nameInput){
+
+                    nameInput.focus();
+
+                }
+
+                return;
+
+            }
+
+
+
+            /* =============================================
+               VALIDATE ATTENDANCE
+            ============================================= */
+
+            if(!attendance){
+
+                if(errorMessage){
+
+                    errorMessage.style.display =
+                        "block";
+
+                    errorMessage.innerText =
+                        "Please select whether you'll be attending.";
+
+                }
+
+                return;
+
+            }
+
+
+
+            /* =============================================
+               GET FAMILY MEMBER COUNT
+            ============================================= */
+
+            let familyMembers =
+                0;
+
+
+            if(
+                attendance === "yes"
+            ){
+
+                if(countSelect){
+
+                    familyMembers =
+                        parseInt(
+                            countSelect.value,
+                            10
+                        ) || 0;
+
+                }
+
+            }
+
+
+            /*
+                If No is selected,
+                family member count must always be 0.
+            */
+
+            if(
+                attendance === "no"
+            ){
+
+                familyMembers =
+                    0;
+
+            }
+
+
+
+            /* =============================================
+               CALCULATE TOTAL COUNT
+            ============================================= */
+
+            /*
+                Employee = 1
+
+                Example:
+
+                Yes + 0 family = 1
+                Yes + 1 family = 2
+                Yes + 3 family = 4
+                Yes + 5 family = 6
+
+                No = 0
+            */
+
+            const totalCount =
+                attendance === "yes"
+                    ? 1 + familyMembers
+                    : 0;
+
+
+
+            /* =============================================
+               CREATE PAYLOAD
+            ============================================= */
+
+            const payload = {
+
+                name:
+                    name,
+
+                attending:
+                    attendance,
+
+                familyMembers:
+                    familyMembers,
+
+                totalCount:
+                    totalCount
+
+            };
+
+
+
+            /* =============================================
+               DEBUG LOG
+            ============================================= */
+
+            console.log(
+                "================================="
             );
 
 
-        message.style.display =
-            "block";
-
-
-        /* =================================================
-           NO ATTENDANCE
-        ================================================= */
-
-        if(
-            attendance === "no"
-        ){
-
-            message.innerHTML = `
-
-                <h2>
-                    We're sorry you won't be able to join us.
-                </h2>
-
-                <p>
-                    Thank you for letting us know.
-                    We hope to see you at one of our future events.
-                </p>
-
-            `;
-
-        }
-
-
-        /* =================================================
-           ATTENDING
-        ================================================= */
-
-        else{
-
-            message.innerHTML = `
-
-                <h2>
-                    🎉 You're on the list!
-                </h2>
-
-                <p>
-                    Thank you for letting us know.
-                    We hope to see you at one of our future events.
-                </p>
-
-            `;
-
-            fireConfetti();
-
-        }
-
-    }
-
-
-    /* =================================================
-       ERROR
-    ================================================= */
-
-    catch(err){
-
-        console.error(
-            "RSVP submit failed:",
-            err
-        );
-
-
-        submitBtn.disabled =
-            false;
-
-        submitBtn.innerText =
-            "Submit RSVP";
-
-
-        const errorBox =
-            document.getElementById(
-                "errorMessage"
+            console.log(
+                "RSVP SUBMISSION"
             );
 
 
-        errorBox.style.display =
-            "block";
+            console.log(
+                "Name:",
+                payload.name
+            );
 
 
-        errorBox.innerText =
-            "Something went wrong submitting your RSVP. Please try again.";
+            console.log(
+                "Attending:",
+                payload.attending
+            );
 
-    }
 
-};
+            console.log(
+                "Family Members:",
+                payload.familyMembers
+            );
+
+
+            console.log(
+                "Total Count:",
+                payload.totalCount
+            );
+
+
+            console.log(
+                "Complete Payload:",
+                payload
+            );
+
+
+            console.log(
+                "================================="
+            );
+
+
+
+            /* =============================================
+               DISABLE SUBMIT BUTTON
+            ============================================= */
+
+            if(submitBtn){
+
+                submitBtn.disabled =
+                    true;
+
+                submitBtn.innerText =
+                    "Submitting...";
+
+            }
+
+
+
+            /* =============================================
+               SEND TO GOOGLE SHEETS
+            ============================================= */
+
+            try{
+
+                await fetch(
+                    API_URL,
+                    {
+
+                        method:
+                            "POST",
+
+
+                        mode:
+                            "no-cors",
+
+
+                        headers:{
+
+                            "Content-Type":
+                                "text/plain;charset=utf-8"
+
+                        },
+
+
+                        body:
+                            JSON.stringify(
+                                payload
+                            )
+
+                    }
+                );
+
+
+
+                console.log(
+                    "RSVP sent to Google Sheets."
+                );
+
+
+
+                /* =========================================
+                   HIDE FORM
+                ========================================= */
+
+                rsvpForm.style.display =
+                    "none";
+
+
+
+                /* =========================================
+                   HIDE RSVP TITLE
+                ========================================= */
+
+                const rsvpTitle =
+                    document.querySelector(
+                        ".rsvp-title"
+                    );
+
+
+                if(rsvpTitle){
+
+                    rsvpTitle.style.display =
+                        "none";
+
+                }
+
+
+
+                /* =========================================
+                   SHOW SUCCESS MESSAGE
+                ========================================= */
+
+                if(message){
+
+                    message.style.display =
+                        "block";
+
+                }
+
+
+
+                /* =========================================
+                   NO ATTENDANCE
+                ========================================= */
+
+                if(
+                    attendance === "no"
+                ){
+
+                    if(message){
+
+                        message.innerHTML = `
+
+                            <h2>
+                                We're sorry you won't be able to join us.
+                            </h2>
+
+                            <p>
+                                Thank you for letting us know.
+                                We hope to see you at one of our future events.
+                            </p>
+
+                        `;
+
+                    }
+
+                }
+
+
+
+                /* =========================================
+                   YES ATTENDANCE
+                ========================================= */
+
+                else{
+
+                    if(message){
+
+                        message.innerHTML = `
+
+                            <h2>
+                                🎉 You're on the list!
+                            </h2>
+
+                            <p>
+                                Thank you for letting us know.
+                                We hope to see you at one of our future events.
+                            </p>
+
+                        `;
+
+                    }
+
+
+                    /*
+                        Fire confetti only for
+                        successful Yes response.
+                    */
+
+                    fireConfetti();
+
+                }
+
+            }
+
+
+
+            /* =============================================
+               ERROR HANDLING
+            ============================================= */
+
+            catch(err){
+
+                console.error(
+                    "RSVP submit failed:",
+                    err
+                );
+
+
+                /* Re-enable button */
+
+                if(submitBtn){
+
+                    submitBtn.disabled =
+                        false;
+
+                    submitBtn.innerText =
+                        "Submit";
+
+                }
+
+
+                /* Show error */
+
+                if(errorMessage){
+
+                    errorMessage.style.display =
+                        "block";
+
+                    errorMessage.innerText =
+                        "Something went wrong submitting your RSVP. Please try again.";
+
+                }
+
+            }
+
+        }
+    );
+
+}
 
 </script>
 
 </body>
 
 </html>
-```
