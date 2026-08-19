@@ -636,48 +636,26 @@ input[type=text]:focus{
     display:none;
 }
 
-.counter{
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    gap:18px;
+.count-select {
+    width: 100%;
+    padding: 13px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(246,241,228,.06);
+    color: var(--cream);
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
 }
 
-.counter button{
-
-    width:36px;
-    height:36px;
-
-    border:none;
-
-    border-radius:50%;
-
-    font-size:18px;
-
-    cursor:pointer;
-
-    background:var(--gold);
-
-    color:var(--ink);
-
-    font-weight:700;
+.count-select:focus {
+    outline: none;
+    border-color: var(--gold);
 }
 
-#count{
-
-    font-size:20px;
-
-    font-weight:700;
-
-    min-width:28px;
-
-    text-align:center;
-
-    font-family:"Fraunces",serif;
+.count-select option {
+    background: var(--ink-2);
+    color: var(--cream);
 }
 
 .submit{
@@ -1095,25 +1073,13 @@ join us as we mark this special milestone together.
     If yes, how many family members will be accompanying you 
 </label>
 
-<div class="counter">
-
-<button
-    type="button"
-    id="minus">
-    −
-</button>
-
-<div id="count">
-    1
-</div>
-
-<button
-    type="button"
-    id="plus">
-    +
-</button>
-
-</div>
+<select id="count" class="count-select">
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="5">5</option>
+</select>
 
 <br>
 
@@ -1142,7 +1108,6 @@ Submit
 
 </section>
 
-
 <script>
 
 /* =====================================================
@@ -1152,14 +1117,9 @@ Submit
 const celebrationImages = [
 
     "1.jpeg",
-
     "2.jpg",
-
     "3.jpg",
-
-    "4.jpg",
-
-   
+    "4.jpg"
 
 ];
 
@@ -1256,17 +1216,20 @@ loadCelebrationImages();
 let attendees = 1;
 
 const options =
-document.querySelectorAll(".option");
+    document.querySelectorAll(".option");
 
 const yesSection =
-document.getElementById("yesSection");
+    document.getElementById("yesSection");
+
+const countSelect =
+    document.getElementById("count");
 
 let attendance = "";
 
 
-/*
-    Yes / No
-*/
+/* =====================================================
+   YES / NO
+===================================================== */
 
 options.forEach(option => {
 
@@ -1285,56 +1248,63 @@ options.forEach(option => {
         attendance =
             option.dataset.value;
 
-        yesSection.style.display =
-            attendance === "yes"
-                ? "block"
-                : "none";
+
+        /*
+            Show family member dropdown
+            only when Yes is selected
+        */
+
+        if(attendance === "yes"){
+
+            yesSection.style.display =
+                "block";
+
+        }
+        else{
+
+            yesSection.style.display =
+                "none";
+
+            /*
+                Reset attendee count
+                when No is selected
+            */
+
+            attendees = 1;
+
+            if(countSelect){
+
+                countSelect.value = "1";
+
+            }
+
+        }
 
     };
 
 });
 
 
-/*
-    Plus
-*/
+/* =====================================================
+   ATTENDEE DROPDOWN
+===================================================== */
 
-document
-.getElementById("plus")
-.onclick = () => {
+if(countSelect){
 
-    if(attendees < 10){
+    countSelect.addEventListener(
+        "change",
+        function(){
 
-        attendees++;
+            attendees =
+                parseInt(
+                    this.value,
+                    10
+                );
 
-        document.getElementById(
-            "count"
-        ).innerText = attendees;
+        }
+    );
 
-    }
-
-};
-
-
-/*
-    Minus
-*/
-
-document
-.getElementById("minus")
-.onclick = () => {
-
-    if(attendees > 1){
-
-        attendees--;
-
-        document.getElementById(
-            "count"
-        ).innerText = attendees;
-
-    }
-
-};
+}
 
 
 /* =====================================================
@@ -1577,6 +1547,10 @@ document
     e.preventDefault();
 
 
+    /* =================================================
+       VALIDATE ATTENDANCE
+    ================================================= */
+
     if(!attendance){
 
         const errorBox =
@@ -1595,6 +1569,10 @@ document
     }
 
 
+    /* =================================================
+       GET SUBMIT BUTTON
+    ================================================= */
+
     const submitBtn =
         document.getElementById(
             "submitBtn"
@@ -1607,17 +1585,46 @@ document
         "Submitting...";
 
 
+    /* =================================================
+       GET EMPLOYEE NAME
+    ================================================= */
+
     const name =
         document.getElementById(
             "name"
-        ).value;
+        ).value.trim();
 
+
+    /* =================================================
+       GET ATTENDEE COUNT
+    ================================================= */
+
+    /*
+        Read the latest selected dropdown value.
+        This ensures the value sent to Google Sheets
+        is always correct.
+    */
+
+    if(attendance === "yes" && countSelect){
+
+        attendees =
+            parseInt(
+                countSelect.value,
+                10
+            );
+
+    }
+
+
+    /* =================================================
+       CREATE PAYLOAD
+    ================================================= */
 
     const payload = {
 
-        name:name,
+        name: name,
 
-        attending:attendance,
+        attending: attendance,
 
         totalCount:
             attendance === "yes"
@@ -1626,6 +1633,16 @@ document
 
     };
 
+
+    console.log(
+        "RSVP Payload:",
+        payload
+    );
+
+
+    /* =================================================
+       SUBMIT TO GOOGLE SHEETS
+    ================================================= */
 
     try{
 
@@ -1651,6 +1668,10 @@ document
         );
 
 
+        /* =================================================
+           HIDE FORM
+        ================================================= */
+
         document.getElementById(
             "rsvpForm"
         ).style.display =
@@ -1663,6 +1684,10 @@ document
             "none";
 
 
+        /* =================================================
+           SHOW SUCCESS MESSAGE
+        ================================================= */
+
         const message =
             document.getElementById(
                 "message"
@@ -1673,36 +1698,45 @@ document
             "block";
 
 
+        /* =================================================
+           NO ATTENDANCE
+        ================================================= */
+
         if(
             attendance === "no"
         ){
 
             message.innerHTML = `
-   <h2>
+
+                <h2>
                     We're sorry you won't be able to join us.
                 </h2>
 
                 <p>
                     Thank you for letting us know.
-                   We hope to see you at one of our future events.
+                    We hope to see you at one of our future events.
                 </p>
 
             `;
 
         }
+
+
+        /* =================================================
+           ATTENDING
+        ================================================= */
+
         else{
 
             message.innerHTML = `
 
-             
                 <h2>
-                   🎉 You're on the list!
+                    🎉 You're on the list!
                 </h2>
 
                 <p>
-                    Thank you for letting
-                    us know, we hope to see you at
-                    one of our future events.
+                    Thank you for letting us know.
+                    We hope to see you at one of our future events.
                 </p>
 
             `;
@@ -1712,6 +1746,12 @@ document
         }
 
     }
+
+
+    /* =================================================
+       ERROR
+    ================================================= */
+
     catch(err){
 
         console.error(
