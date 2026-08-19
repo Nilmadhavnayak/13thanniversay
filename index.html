@@ -679,33 +679,62 @@ document
     }
 };
 
+const API_URL =
+    "PASTE_YOUR_WEB_APP_URL_HERE";
+
 document
 .getElementById("rsvpForm")
-.onsubmit=function(e){
+.onsubmit = async function(e){
 
     e.preventDefault();
 
-    this.style.display="none";
+    const name =
+        document.getElementById("name")
+        .value;
 
-    const message=
-    document.getElementById("message");
+    const payload = {
 
-    message.style.display="block";
+        name: name,
 
-    if(attendance==="no"){
+        attending: attendance,
 
-        message.innerHTML=`
+        totalCount:
+            attendance === "yes"
+            ? attendees
+            : 0
 
-        <h2>
+    };
 
-        Thank You
+    await fetch(API_URL, {
 
-        </h2>
+        method: "POST",
+
+        headers: {
+            "Content-Type":
+            "application/json"
+        },
+
+        body:
+            JSON.stringify(payload)
+
+    });
+
+    this.style.display = "none";
+
+    const message =
+        document.getElementById("message");
+
+    message.style.display = "block";
+
+    if(attendance === "no") {
+
+        message.innerHTML = `
+
+        <h2>Thank You</h2>
 
         <p>
 
-        We're sorry you won't be able
-        to join us.
+        We're sorry you won't be able to join us.
 
         <br><br>
 
@@ -713,24 +742,16 @@ document
 
         <br><br>
 
-        We hope to see you at one of
-        our future events.
+        We hope to see you at one of our future events.
 
         </p>
-
         `;
 
-    }
+    } else {
 
-    else{
+        message.innerHTML = `
 
-        message.innerHTML=`
-
-        <h2>
-
-        🎉 You're on the list!
-
-        </h2>
+        <h2>🎉 You're on the list!</h2>
 
         <p>
 
@@ -738,19 +759,13 @@ document
 
         <br><br>
 
-        Total attendees:
-
-        <strong>
-
-        ${attendees}
-
-        </strong>
+        Total attendees: ${attendees}
 
         </p>
-
         `;
 
     }
+
 };
 
 </script>
